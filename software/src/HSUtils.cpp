@@ -4,6 +4,8 @@
 #include "tideslite.h"
 #include "OC_gpio.h"
 #include "HSUtils.h"
+#include "enigma/TuringMachine.h"
+#include "vector_osc/HSVectorOscillator.h"
 
 #ifdef ARDUINO_TEENSY41
 #include "SD.h"
@@ -18,6 +20,10 @@ namespace HS {
   ErrMsgIndex msg_idx;
 
   OC::SemitoneQuantizer input_quant[ADC_CHANNEL_LAST];
+
+  // All of the HS:: globals should be instantiated here
+  TuringMachine user_turing_machines[TURING_MACHINE_COUNT];
+  VOSegment user_waveforms[VO_SEGMENT_COUNT];
 
   braids::Quantizer quantizer[QUANT_CHANNEL_COUNT]; // global shared quantizers
   int16_t quant_scale[QUANT_CHANNEL_COUNT];

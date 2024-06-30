@@ -10,6 +10,8 @@
 #pragma once
 
 #include <vector>
+#include "OC_digital_inputs.h"
+#include "OC_io.h"
 #include "HSMIDI.h"
 #include "HSUtils.h"
 #include "OC_DAC.h"
@@ -694,24 +696,25 @@ struct IOFrame {
 
     // TODO: Hardware IO should be extracted
     // --- Hard IO ---
-    void Load() {
+    void Load(OC::IOFrame *ioframe) {
         bool clocktmp[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
-        clocktmp[0] = OC::DigitalInputs::clocked<OC::DIGITAL_INPUT_1>();
-        clocktmp[1] = OC::DigitalInputs::clocked<OC::DIGITAL_INPUT_2>();
-        clocktmp[2] = OC::DigitalInputs::clocked<OC::DIGITAL_INPUT_3>();
-        clocktmp[3] = OC::DigitalInputs::clocked<OC::DIGITAL_INPUT_4>();
-        gate_high[0] = OC::DigitalInputs::read_immediate<OC::DIGITAL_INPUT_1>();
-        gate_high[1] = OC::DigitalInputs::read_immediate<OC::DIGITAL_INPUT_2>();
-        gate_high[2] = OC::DigitalInputs::read_immediate<OC::DIGITAL_INPUT_3>();
-        gate_high[3] = OC::DigitalInputs::read_immediate<OC::DIGITAL_INPUT_4>();
+
+        auto triggers = ioframe->digital_inputs.triggered();
+
         for (int i = 0; i < ADC_CHANNEL_LAST; ++i) {
             // Set CV inputs
-            inputs[i] = OC::ADC::raw_pitch_value(ADC_CHANNEL(i));
+            inputs[i] = ioframe->cv.pitch_values[i];
+
+            if (i < OC::DIGITAL_INPUT_LAST) {
+              clocktmp[i] = triggers & DIGITAL_INPUT_MASK(i);
+              gate_high[i] = ioframe->digital_inputs.raised(static_cast<OC::DigitalInput>(i));
+            }
 
             // calculate gates/clocks for all ADC inputs as well
             gate_high[OC::DIGITAL_INPUT_LAST + i] = inputs[i] > GATE_THRESHOLD;
             clocktmp[OC::DIGITAL_INPUT_LAST + i] = (gate_high[OC::DIGITAL_INPUT_LAST + i] && last_cv[i] < GATE_THRESHOLD);
 
+            // some calculations for change detection
             if (abs(inputs[i] - last_cv[i]) > HEMISPHERE_CHANGE_THRESHOLD) {
                 changed_cv[i] = 1;
                 last_cv[i] = inputs[i];
@@ -755,8 +758,7 @@ struct IOFrame {
           clockout_q[i] = false;
         }
     }
-
-    void Send() {
+    void Send(OC::IOFrame *ioframe) {
         const DAC_CHANNEL chan[DAC_CHANNEL_LAST] = {
           DAC_CHANNEL_A, DAC_CHANNEL_B, DAC_CHANNEL_C, DAC_CHANNEL_D,
 #ifdef ARDUINO_TEENSY41
@@ -764,7 +766,9 @@ struct IOFrame {
 #endif
         };
         for (int i = 0; i < DAC_CHANNEL_LAST; ++i) {
-            OC::DAC::set_pitch_scaled(chan[i], outputs[i], 0);
+          // OC::DAC::set_pitch_scaled(chan[i], outputs[i], 0);
+          // output scaling is built-in now?
+          ioframe->outputs.set_pitch_value(chan[i], outputs[i]);
         }
         if (autoMIDIOut) MIDIState.Send(outputs);
     }
