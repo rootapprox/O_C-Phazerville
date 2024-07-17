@@ -21,6 +21,7 @@ namespace HS {
 static constexpr int GATE_THRESHOLD = 15 << 7; // 1.25 volts
 static constexpr int TRIGMAP_MAX = OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST + DAC_CHANNEL_LAST;
 static constexpr int CVMAP_MAX = ADC_CHANNEL_LAST + DAC_CHANNEL_LAST;
+static constexpr int MAX_CHANNELS = 32;
 
 struct MIDILogEntry {
     uint8_t message;
@@ -40,23 +41,23 @@ struct PolyphonyData {
 };
 
 struct MIDIFrame {
-    uint8_t channel[DAC_CHANNEL_LAST]; // MIDI channel number
-    int function[DAC_CHANNEL_LAST]; // Function for each channel
-    int function_cc[DAC_CHANNEL_LAST]; // CC# for each channel
-    uint16_t semitone_mask[DAC_CHANNEL_LAST]; // which notes are currently on
-    uint8_t dac_polyvoice[DAC_CHANNEL_LAST]; // select which voice to send from output
+    uint8_t channel[MAX_CHANNELS]; // MIDI channel number
+    int function[MAX_CHANNELS]; // Function for each channel
+    int function_cc[MAX_CHANNELS]; // CC# for each channel
+    uint16_t semitone_mask[MAX_CHANNELS]; // which notes are currently on
+    uint8_t dac_polyvoice[MAX_CHANNELS]; // select which voice to send from output
 
     // MIDI input stuff handled by MIDIIn applet
     std::vector<MIDINoteData> note_buffer[16]; // note buffer to track all held notes on all channels
-    int outputs[DAC_CHANNEL_LAST]; // translated CV values
-    bool trigout_q[DAC_CHANNEL_LAST];
+    int outputs[MAX_CHANNELS]; // translated CV values
+    bool trigout_q[MAX_CHANNELS];
     uint8_t last_midi_channel = 0; // for MIDI In activity monitor
     uint16_t sustain_latch; // each bit is a MIDI channel's sustain state
 
     uint8_t pc_channel = 0; // program change channel filter, used for preset selection
     static constexpr uint8_t PC_OMNI = 0;
 
-    PolyphonyData poly_buffer[DAC_CHANNEL_LAST]; // buffer for polyphonic data tracking
+    PolyphonyData poly_buffer[MAX_CHANNELS]; // buffer for polyphonic data tracking
     uint8_t max_voice = 1;
     int poly_mode = 0;
     int8_t poly_rotate_index = -1;
@@ -275,13 +276,13 @@ struct MIDIFrame {
 #endif
     };
     uint8_t current_note[16]; // note number, per MIDI channel
-    uint8_t current_ccval[DAC_CHANNEL_LAST]; // level 0 - 127, per DAC channel
-    int note_countdown[DAC_CHANNEL_LAST];
-    int inputs[DAC_CHANNEL_LAST]; // CV to be translated
-    int last_cv[DAC_CHANNEL_LAST];
-    bool clocked[DAC_CHANNEL_LAST];
-    bool gate_high[DAC_CHANNEL_LAST];
-    bool changed_cv[DAC_CHANNEL_LAST];
+    uint8_t current_ccval[MAX_CHANNELS]; // level 0 - 127, per DAC channel
+    int note_countdown[MAX_CHANNELS];
+    int inputs[MAX_CHANNELS]; // CV to be translated
+    int last_cv[MAX_CHANNELS];
+    bool clocked[MAX_CHANNELS];
+    bool gate_high[MAX_CHANNELS];
+    bool changed_cv[MAX_CHANNELS];
 
     // Logging
     MIDILogEntry log[7];
@@ -655,20 +656,20 @@ struct MIDIFrame {
 // this will allow chaining applets together, multiple stages of processing
 struct IOFrame {
     bool autoMIDIOut = false;
-    bool clocked[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
-    bool gate_high[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
-    int inputs[ADC_CHANNEL_LAST];
-    int outputs[DAC_CHANNEL_LAST];
-    int output_diff[DAC_CHANNEL_LAST];
-    int outputs_smooth[DAC_CHANNEL_LAST];
-    int clock_countdown[DAC_CHANNEL_LAST];
-    uint8_t clockskip[DAC_CHANNEL_LAST] = {0};
-    bool clockout_q[DAC_CHANNEL_LAST]; // for loopback
-    int adc_lag_countdown[ADC_CHANNEL_LAST]; // Time between a clock event and an ADC read event
-    uint32_t last_clock[ADC_CHANNEL_LAST]; // Tick number of the last clock observed by the child class
-    uint32_t cycle_ticks[ADC_CHANNEL_LAST]; // Number of ticks between last two clocks
-    bool changed_cv[ADC_CHANNEL_LAST]; // Has the input changed by more than 1/8 semitone since the last read?
-    int last_cv[ADC_CHANNEL_LAST]; // For change detection
+    bool clocked[MAX_CHANNELS];
+    bool gate_high[MAX_CHANNELS];
+    int inputs[MAX_CHANNELS];
+    int outputs[MAX_CHANNELS];
+    int output_diff[MAX_CHANNELS];
+    int outputs_smooth[MAX_CHANNELS];
+    int clock_countdown[MAX_CHANNELS];
+    uint8_t clockskip[MAX_CHANNELS] = {0};
+    bool clockout_q[MAX_CHANNELS]; // for loopback
+    int adc_lag_countdown[MAX_CHANNELS]; // Time between a clock event and an ADC read event
+    uint32_t last_clock[MAX_CHANNELS]; // Tick number of the last clock observed by the child class
+    uint32_t cycle_ticks[MAX_CHANNELS]; // Number of ticks between last two clocks
+    bool changed_cv[MAX_CHANNELS]; // Has the input changed by more than 1/8 semitone since the last read?
+    int last_cv[MAX_CHANNELS]; // For change detection
 
     /* MIDI message queue/cache */
     MIDIFrame MIDIState;
