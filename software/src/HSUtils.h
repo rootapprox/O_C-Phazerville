@@ -4,6 +4,7 @@
 #include "OC_ADC.h"
 #include "OC_scales.h"
 #include "PackingUtils.h"
+#include "util/util_semitone_quantizer.h"
 
 // misc. utility functions extracted from Hemisphere
 // -NJM
@@ -213,7 +214,7 @@ namespace HS {
   extern ErrMsgIndex msg_idx;
 
   // input quantizers, because sometimes we need hysteresis
-  extern OC::SemitoneQuantizer input_quant[ADC_CHANNEL_LAST];
+  extern util::SemitoneQuantizer input_quant[ADC_CHANNEL_LAST];
 
   extern braids::Quantizer quantizer[QUANT_CHANNEL_COUNT]; // global shared quantizers
   extern int16_t quant_scale[QUANT_CHANNEL_COUNT];
