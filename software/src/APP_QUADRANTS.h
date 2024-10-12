@@ -301,8 +301,9 @@ public:
         audio_app.LoadPreset(id);
         PokePopup(PRESET_POPUP);
     }
-    void ProcessQueue() {
-      LoadFromPreset(queued_preset);
+    static void ProcessQueue() {
+      // TODO:
+        //LoadFromPreset(queued_preset);
     }
     void QueuePresetLoad(int id) {
       if (HS::clock_m.IsRunning()) {
@@ -1238,7 +1239,7 @@ void QuadrantSysExHandler() {
   // TODO
 }
 void QuadrantBeatSync() {
-  // TODO
+    AppQuadrants::ProcessQueue();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
