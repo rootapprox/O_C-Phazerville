@@ -82,7 +82,7 @@ namespace menu = OC::menu;
 #ifndef __IMXRT1062__
 // #include "APP_Backup.h"
 #endif
-// #include "APP_SETTINGS.h"
+#include "APP_SETTINGS.h"
 
 /*
 static constexpr OC::App app_container[] = {
@@ -208,6 +208,7 @@ enum GlobalSettingsDataKeys : uint16_t {
 // triage all code (minus any dangling static parts). (Yeah, this still relies
 // on the fugly .ino compilation method, don't @ me).
 static AppContainer<void // this space intentionally left blank
+//  , AppSettings
 #ifndef NO_HEMISPHERE
   , AppHemisphere
 #endif
