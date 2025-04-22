@@ -77,6 +77,7 @@ class TB_3PO: public HemisphereApplet {
     if (lock_seed == 0) {
       reseed();
     }
+    regenerate_all();
     step = 0;
   }
 
@@ -396,7 +397,6 @@ private:
   void reseed() {
     randomSeed(micros());
     seed = random(0, 65535); // 16 bits
-    regenerate_all();
   }
 
   void regenerate_all() {
