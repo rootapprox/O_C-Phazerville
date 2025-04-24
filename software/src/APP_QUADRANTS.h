@@ -656,6 +656,7 @@ public:
 
         // cancel preset select or config screens
         if (config_page || preset_cursor) {
+          if (isEditing && config_cursor == PRESET_BANK_NUM) SetBank(bank_num);
           preset_cursor = 0;
           config_page = HIDE_CONFIG;
           HS::popup_tick = 0;
@@ -706,7 +707,7 @@ public:
         if (view_state == APPLET_FULLSCREEN) {
             if (select_mode == zoom_slot)
               ChangeApplet(zoom_slot, event.value);
-            else if (h == LEFT_HEMISPHERE)
+            else if (h == LEFT_HEMISPHERE && !isEditing)
               zoom_cursor = (event.value > 0)? 0 : -1;
             else if (zoom_cursor < 0)
               active_applet[zoom_slot]->OnEncoderMove(event.value);
@@ -736,6 +737,7 @@ public:
                 case 6:
                   // TODO: per applet?
                 default:
+                  isEditing = false;
                   break;
               }
             } else { // enc moves cursor
@@ -756,6 +758,7 @@ public:
       else if (config_cursor < TRIGMAP1) config_page = CONFIG_SETTINGS;
       else if (config_cursor < QUANT1) config_page = INPUT_SETTINGS;
       else if (config_cursor < SHOWHIDELIST) config_page = QUANTIZER_SETTINGS;
+      else config_page = LAST_PAGE;
     }
     void ToggleConfigMenu() {
       if (config_page) {
@@ -885,6 +888,7 @@ public:
           {
               if (CheckButtonCombos(event)) {
                 select_mode = -1;
+                isEditing = false;
                 OC::ui.SetButtonIgnoreMask(); // ignore release and long-press
               } else {
                 HEM_SIDE slot = ButtonToSlot(event);
