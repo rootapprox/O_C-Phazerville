@@ -219,6 +219,8 @@ public:
   }
 
   uint64_t OnDataRequest() {
+    // STOP playback to avoid SD card hangup on preset save
+    wavplayer[0].stop();
     return PackPackables(level, level_cv, playrate, playrate_cv, wavplayer_select[0], djfilter);
   }
   void OnDataReceive(uint64_t data) {
