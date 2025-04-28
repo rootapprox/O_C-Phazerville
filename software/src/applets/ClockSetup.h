@@ -70,7 +70,7 @@ public:
             frame.MIDIState.start_q = 0;
             clock_m.DisableMIDIOut();
             clock_m.Start();
-            OC::ui._Poke();
+            OC::ui.Poke();
             HS::PokePopup(HS::CLOCK_POPUP);
         }
         if (frame.MIDIState.stop_q) {
@@ -83,7 +83,7 @@ public:
         // Paused means wait for clock-sync to start
         if (clock_m.IsPaused() && clock_sync) {
             clock_m.Start();
-            OC::ui._Poke();
+            OC::ui.Poke();
             HS::PokePopup(HS::CLOCK_POPUP);
         }
 
