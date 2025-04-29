@@ -59,7 +59,7 @@ public:
     void OnEncoderMove(int direction) {
         level = constrain(level + direction, 0, HEM_COMPARE_MAX_VALUE);
     }
-        
+
     uint64_t OnDataRequest() {
         uint64_t data = 0;
         Pack(data, PackLocation {0,8}, level);
@@ -67,7 +67,7 @@ public:
     }
 
     void OnDataReceive(uint64_t data) {
-        level = Unpack(data, PackLocation {0,8});
+        level = constrain(Unpack(data, PackLocation {0,8}), 0, HEM_COMPARE_MAX_VALUE);
     }
 
 protected:
