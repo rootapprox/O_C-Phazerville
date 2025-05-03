@@ -29,8 +29,7 @@ public:
     void Start() { }
 
     void Unload() {
-        HS::clock_m.SetTempoBPM(HS::clock_m.tempo_setting);
-        HS::clock_m.SetShuffle(HS::clock_m.shuffle_setting);
+        HS::clock_m.Modulate(0, 0);
     }
 
     void Controller() {
