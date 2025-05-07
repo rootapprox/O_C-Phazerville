@@ -67,7 +67,7 @@ public:
     }
 
     void OnDataReceive(uint64_t data) {
-        level = constrain(Unpack(data, PackLocation {0,8}), 0, HEM_COMPARE_MAX_VALUE);
+        level = Unpack(data, PackLocation {0,8});
     }
 
 protected:

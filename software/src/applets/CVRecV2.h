@@ -143,7 +143,7 @@ public:
     }
 
     void OnDataReceive(uint64_t data) {
-        start = constrain(Unpack(data, PackLocation {0,9}), 0, end - 1);
+        start = constrain(Unpack(data, PackLocation {0,9}), 0, CVREC_MAX_STEP - 2);
         end = constrain(Unpack(data, PackLocation {9,9}), start + 1, CVREC_MAX_STEP - 1);
         smooth = Unpack(data, PackLocation {18,1});
     }
