@@ -656,6 +656,7 @@ struct MIDIFrame {
 // this will allow chaining applets together, multiple stages of processing
 struct IOFrame {
     bool autoMIDIOut = false;
+    bool synctrig = false;
     bool clocked[MAX_CHANNELS];
     bool gate_high[MAX_CHANNELS];
     int inputs[MAX_CHANNELS];
@@ -695,12 +696,13 @@ struct IOFrame {
         clockskip[ch] = constrain(clockskip[ch] + dir, 0, 100);
     }
 
-    // TODO: Hardware IO should be extracted
     // --- Hard IO ---
     void Load(OC::IOFrame *ioframe) {
         bool clocktmp[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
-
         auto triggers = ioframe->digital_inputs.triggered();
+
+        // TODO: configurable clock sync input
+        synctrig = triggers & DIGITAL_INPUT_MASK(0);
 
         for (int i = 0; i < ADC_CHANNEL_LAST; ++i) {
             // Set CV inputs

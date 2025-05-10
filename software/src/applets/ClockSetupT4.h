@@ -66,7 +66,7 @@ public:
 
     // The ClockSetup controller handles MIDI Clock and Transport Start/Stop
     void Controller() {
-        bool clock_sync = HS::frame.clocked[0];
+        bool clock_sync = HS::frame.synctrig;
 
         // MIDI Clock is filtered to 2 PPQN
         if (frame.MIDIState.clock_q) {
