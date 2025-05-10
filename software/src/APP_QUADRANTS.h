@@ -482,7 +482,7 @@ public:
       }
     }
 
-    void View() {
+    void View() const {
         bool draw_applets = true;
 
         if (preset_cursor) {
