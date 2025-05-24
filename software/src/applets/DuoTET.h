@@ -34,7 +34,6 @@
 // using other applets.
 
 #include <arm_math.h>
-#include "../CVInputMap.h"
 
 #define DUOTET_SCALE_MAX_LEN 32
 
