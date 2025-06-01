@@ -21,6 +21,8 @@
 // SOFTWARE.
 
 // See https://www.pjrc.com/teensy/td_midi.html
+//
+// Adapted for T4.x and 8-channel hardware by djphazer
 
 #ifdef ENABLE_APP_MIDI
 
@@ -36,11 +38,11 @@
 #include "HSApplication.h"
 #include "HSMIDI.h"
 
-#define MIDI_INDICATOR_COUNTDOWN 2000
-#define MIDI_PARAMETER_COUNT 40
-#define MIDI_CURRENT_SETUP (MIDI_PARAMETER_COUNT * 4)
-#define MIDI_SETTING_LAST (MIDI_CURRENT_SETUP + 1)
-#define MIDI_LOG_MAX_SIZE 101
+static constexpr int MIDI_SETUP_COUNT = 4;
+static constexpr int MIDI_PARAMETER_COUNT = 40;
+static constexpr int MIDI_CURRENT_SETUP = (MIDI_PARAMETER_COUNT * MIDI_SETUP_COUNT);
+static constexpr int MIDI_SETTING_COUNT = (MIDI_CURRENT_SETUP + 1);
+static constexpr int MIDI_LOG_MAX_SIZE = 101;
 
 // Icons that are used next to the menu items
 const uint8_t MIDI_midi_icon[8] = {0x3c, 0x42, 0x91, 0x45, 0x45, 0x91, 0x42, 0x3c};
@@ -200,9 +202,15 @@ struct CaptainMIDILog {
     }
 };
 
-class CaptainMIDI : public SystemExclusiveHandler, public HSApplication,
-    public settings::SettingsBase<CaptainMIDI, MIDI_SETTING_LAST> {
+class CaptainMIDI : public HSApplication, public SystemExclusiveHandler
+#ifndef __IMXRT1062__
+  , public settings::SettingsBase<CaptainMIDI, MIDI_SETTING_COUNT>
+#endif
+{
 public:
+    static constexpr int MIDI_INDICATOR_COUNTDOWN = 2000;
+
+    //uint8_t CaptainSettings[MIDI_SETUP_COUNT][MIDI_PARAMETER_COUNT];
     OC::menu::ScreenCursor<OC::menu::kScreenLines> cursor;
 
     void Start() {
@@ -213,32 +221,50 @@ public:
         log_view = 0;
         Reset();
 
+#ifdef __IMXRT1062__
+        // TODO
+#else
         // Go through all the Setups and change the default high ranges to G9
-        for (int s = 0; s < 4; s++)
+        for (int s = 0; s < MIDI_SETUP_COUNT; s++)
         {
             for (int p = 0; p < 8; p++)
                 if (values_[s * MIDI_PARAMETER_COUNT + 32 + p] == 0) values_[s * MIDI_PARAMETER_COUNT + 32 + p] = 127;
         }
-	}
+#endif
+    }
 
     void Resume() {
         SelectSetup(get_setup_number(), 0);
     }
 
     void Controller() {
+        // Process incoming MIDI traffic
         midi_in(usbMIDI);
 #ifdef ARDUINO_TEENSY41
         midi_in(usbHostMIDI);
         midi_in(MIDI1);
         thisUSB.Task();
 #endif
+
+        // Convert CV inputs to outgoing MIDI messages
         midi_out();
 
-        // Handle clock timing
-        for (int ch = 0; ch < 4; ch++)
+        // set CV outputs from MIDI mappings
+        for (int ch = 0; ch < DAC_CHANNEL_COUNT; ch++)
         {
+            // Handle clock timing
             if (indicator_in[ch] > 0) --indicator_in[ch];
             if (indicator_out[ch] > 0) --indicator_out[ch];
+
+            MIDIMapping &map = frame.MIDIState.mapping[ch];
+
+            // TODO: check setting to avoid defeating ClockOut
+            if (map.trigout_q) {
+              ClockOut(ch);
+              map.trigout_q = 0;
+            } else {
+              Out(ch, map.output);
+            }
         }
     }
 
@@ -263,7 +289,11 @@ public:
         // And go to there
         cursor.Init(start, end);
         cursor.Scroll(prev_cursor);
+#ifdef __IMXRT1062__
+        // TODO
+#else
         values_[MIDI_CURRENT_SETUP] = setup_number;
+#endif
         screen = new_screen;
     }
 
@@ -294,7 +324,7 @@ public:
 
     void Reset() {
         // Reset the interface states
-        for (int ch = 0; ch < 4; ch++)
+        for (int ch = 0; ch < DAC_CHANNEL_COUNT; ch++)
         {
             note_in[ch] = -1;
             note_out[ch] = -1;
@@ -328,7 +358,12 @@ public:
         uint8_t offset = MIDI_PARAMETER_COUNT * get_setup_number();
         for (int i = 0; i < MIDI_PARAMETER_COUNT; i++)
         {
+#ifdef __IMXRT1062__
+        // TODO
+            int p = 0;
+#else
             int p = values_[i + offset];
+#endif
             if (i > 15 && i < 24) p += 24; // These are signed, so they need to be converted
             V[i] = static_cast<uint8_t>(p);
         }
@@ -350,7 +385,11 @@ public:
             {
                 int p = (int)V[i];
                 if (i > 15 && i < 24) p -= 24; // Restore the sign removed in OnSendSysEx()
+#ifdef __IMXRT1062__
+                // TODO
+#else
                 apply_value(i + offset, p);
+#endif
             }
             UpdateLog(1, 0, 5, 0, 'M', 0);
         } else {
@@ -381,7 +420,11 @@ public:
            int target_offset = MIDI_PARAMETER_COUNT * target;
            for (int c = 0; c < MIDI_PARAMETER_COUNT; c++)
            {
+#ifdef __IMXRT1062__
+        // TODO
+#else
                values_[target_offset + c] = values_[source_offset + c];
+#endif
            }
            SelectSetup(target);
            Resume();
@@ -394,8 +437,12 @@ public:
     */
    void ConstrainRangeValue(int ix) {
        int page = ix / 8; // Page within a Setup
+#ifdef __IMXRT1062__
+        // TODO
+#else
        if (page == 4 && values_[ix] < values_[ix - 8]) values_[ix] = values_[ix - 8];
        if (page == 3 && values_[ix] > values_[ix + 8]) values_[ix] = values_[ix + 8];
+#endif
    }
 
 private:
@@ -411,8 +458,10 @@ private:
     int log_view; // Current index for viewing
 
     // MIDI In
+    uint8_t mapidx[DAC_CHANNEL_COUNT];
+    // TODO: replace with semitone_mask
     int note_in[4]; // Up to four notes at a time are kept track of with MIDI In
-    uint16_t indicator_in[4]; // A MIDI indicator will display next to MIDI In assignment
+    uint16_t indicator_in[DAC_CHANNEL_COUNT]; // A MIDI indicator will display next to MIDI In assignment
     uint8_t clock_count; // MIDI clock counter (24ppqn)
 
     // MIDI Out
@@ -537,12 +586,16 @@ private:
     }
 
     int get_setup_number() {
+#ifdef __IMXRT1062__
+        // TODO
+#else
         return values_[MIDI_CURRENT_SETUP];
+#endif
     }
 
     void midi_out() {
         auto &hMIDI = HS::frame.MIDIState;
-        for (int ch = 0; ch < 4; ch++)
+        for (int ch = 0; ch < DAC_CHANNEL_COUNT; ch++)
         {
             int out_fn = get_out_assign(ch);
             int out_ch = get_out_channel(ch);
@@ -576,7 +629,7 @@ private:
                     if (note_on) {
                         int velocity = 0x64;
                         // Look for an input assigned to velocity on the same channel and, if found, use it
-                        for (int vch = 0; vch < 4; vch++)
+                        for (int vch = 0; vch < DAC_CHANNEL_COUNT; vch++)
                         {
                             if (get_out_assign(vch) == MIDI_OUT_VELOCITY && get_out_channel(vch) == out_ch) {
                                 velocity = Proportion(In(vch), HSAPPLICATION_5V, 127);
@@ -649,18 +702,21 @@ private:
     template <typename T1>
     void midi_in(T1 &device) {
         if (device.read()) {
-            int message = device.getType();
-            int channel = device.getChannel();
-            int data1 = device.getData1();
-            int data2 = device.getData2();
+            uint8_t message = device.getType();
+            uint8_t channel = device.getChannel();
+            uint8_t data1 = device.getData1();
+            uint8_t data2 = device.getData2();
 
-            process_midi_in(message, channel, data1, data2);
+            // Handle system exclusive dump for Setup data
+            if (message == HEM_MIDI_SYSEX) OnReceiveSysEx();
+
+            HS::frame.MIDIState.ProcessMIDIMsg(channel, message, data1, data2);
+            //process_midi_in(message, channel, data1, data2);
         }
     }
 
     void process_midi_in(int message, int channel, int data1, int data2) {
-        // Handle system exclusive dump for Setup data
-        if (message == HEM_MIDI_SYSEX) OnReceiveSysEx();
+      // TODO: verify all this is now handled within HS::MIDIState, MIDIMapping
 
         // Listen for incoming clock
         if (message == HEM_MIDI_CLOCK) {
@@ -672,7 +728,7 @@ private:
 
         // A MIDI message has been received; go through each channel to see if it
         // needs to be routed to any of the CV outputs
-        for (int ch = 0; ch < 4; ch++)
+        for (int ch = 0; ch < DAC_CHANNEL_COUNT; ch++)
         {
             int in_fn = get_in_assign(ch);
             int in_ch = get_in_channel(ch);
@@ -789,6 +845,40 @@ private:
         return mod;
     }
 
+#ifdef __IMXRT1062__
+    // TODO: these should be implemented in MIDIFrame
+    int get_in_assign(int ch) {
+      return 0;
+    }
+
+    int get_in_channel(int ch) {
+      return 0;
+    }
+
+    int get_in_transpose(int ch) {
+      return 0;
+    }
+
+    bool in_in_range(int ch, int note) {
+      return 0;
+    }
+
+    int get_out_assign(int ch) {
+      return 0;
+    }
+
+    int get_out_channel(int ch) {
+      return 0;
+    }
+
+    int get_out_transpose(int ch) {
+      return 0;
+    }
+
+    bool in_out_range(int ch, int note) {
+      return 0;
+    }
+#else
     int get_in_assign(int ch) {
         int setup_offset = get_setup_number() * MIDI_PARAMETER_COUNT;
         return values_[ch + setup_offset];
@@ -832,6 +922,7 @@ private:
         int range_high = values_[36 + ch + setup_offset];
         return (note >= range_low && note <= range_high);
     }
+#endif
 
     void UpdateLog(bool midi_in, int ch, uint8_t message, uint8_t channel, int16_t data1, int16_t data2) {
         // Don't log SysEx unless the user is on the log display screen
@@ -851,14 +942,17 @@ private:
     }
 };
 
+#ifdef __IMXRT1062__
+#else
 // TOTAL EEPROM SIZE: 40*4 + 1 == 161 bytes
-SETTINGS_DECLARE(CaptainMIDI, MIDI_SETTING_LAST) {
+SETTINGS_DECLARE(CaptainMIDI, MIDI_SETTING_COUNT) {
     MIDI_SETUP_PARAMETER_LIST
     MIDI_SETUP_PARAMETER_LIST
     MIDI_SETUP_PARAMETER_LIST
     MIDI_SETUP_PARAMETER_LIST
     { 0, 0, 1, "Setup", NULL, settings::STORAGE_TYPE_U8 }
 };
+#endif
 
 CaptainMIDI captain_midi_instance;
 
@@ -869,19 +963,23 @@ void MIDI_init() {
     captain_midi_instance.Start();
 }
 
+#ifdef __IMXRT1062__
+static constexpr size_t MIDI_storageSize() { return 0; }
+static size_t MIDI_save(void *storage) { return 0; }
+static size_t MIDI_restore(const void *storage) { return 0; }
+#else
 static constexpr size_t MIDI_storageSize() {
     return CaptainMIDI::storageSize();
 }
-
 static size_t MIDI_save(void *storage) {
     return captain_midi_instance.Save(storage);
 }
-
 static size_t MIDI_restore(const void *storage) {
     size_t s = captain_midi_instance.Restore(storage);
     captain_midi_instance.Resume();
     return s;
 }
+#endif
 
 void MIDI_isr() {
 	return captain_midi_instance.BaseController();
@@ -899,7 +997,9 @@ void MIDI_menu() {
     captain_midi_instance.BaseView();
 }
 
-void MIDI_screensaver() {}
+void MIDI_screensaver() {
+    captain_midi_instance.BaseScreensaver();
+}
 
 void MIDI_handleButtonEvent(const UI::Event &event) {
     if (event.control == OC::CONTROL_BUTTON_R && event.type == UI::EVENT_BUTTON_PRESS)
