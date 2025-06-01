@@ -107,7 +107,7 @@ struct MIDIFrame {
 
     void UpdateMaxPolyphony() { // find max voice number to determine how much to buffer
         int voice = 0;
-        for (int ch = 0; ch < DAC_CHANNEL_LAST; ++ch) {
+        for (int ch = 0; ch < MIDIMAP_MAX; ++ch) {
             if (mapping[ch].dac_polyvoice > voice) voice = mapping[ch].dac_polyvoice;
         }
         if (max_voice != voice+1) {
