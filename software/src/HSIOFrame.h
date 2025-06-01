@@ -44,23 +44,25 @@ struct MIDIMapping {
   uint8_t function;
   uint8_t channel; // MIDI channel number
   uint8_t dac_polyvoice; // select which voice to send from output
+  int8_t transpose;
+  uint8_t range_low, range_high;
 
-  static constexpr size_t Size = 32; // Make this compatible with Packable
+  static constexpr size_t Size = 64; // Make this compatible with Packable
 
   // state
   bool trigout_q; // TRIGGA
   uint16_t semitone_mask; // which notes are currently on
   int16_t output; // translated CV values
 
-  uint32_t Pack() const {
-    return (function_cc & 0xFF) | (function << 8) | (channel << 16) | (dac_polyvoice << 24);
+  uint64_t Pack() const {
+    return PackPackables(function_cc, function, channel, dac_polyvoice, transpose);
   }
-  void Unpack(uint32_t data) {
-    function_cc = data & 0xFF;
-    function = (data >> 8) & 0xFF;
+  void Unpack(uint64_t data) {
+    UnpackPackables(data, function_cc, function, channel, dac_polyvoice, transpose);
+    // validation for safety
     if (function > HEM_MIDI_MAX_FUNCTION) function = 0;
-    channel = (data >> 16) & 0x1F;
-    dac_polyvoice = (data >> 24) & 0x0F;
+    channel &= 0x1F;
+    dac_polyvoice &= 0x0F;
   }
 };
 
@@ -89,6 +91,54 @@ struct MIDIFrame {
     uint16_t midi_channel_filter = 0; // each bit state represents a channel. 1 means enabled. all 0's means Omni (no channel filter)
     bool any_channel_omni = false;
 
+    // Clock/Start/Stop are handled by ClockSetup applet
+    bool clock_run = 0;
+    bool clock_q;
+    bool start_q;
+    bool stop_q;
+    uint8_t clock_count; // MIDI clock counter (24ppqn)
+    uint32_t last_msg_tick; // Tick of last received message
+
+    void Init() {
+      for (int ch = 0; ch < MIDIMAP_MAX; ++ch) {
+        mapping[ch].function = 0;
+        mapping[ch].transpose = 0;
+        mapping[ch].output = 0;
+        mapping[ch].dac_polyvoice = ch / 2 % DAC_CHANNEL_COUNT; // each quad is a unique voice
+        mapping[ch].range_low = 0;
+        mapping[ch].range_high = 127;
+      }
+      clock_count = 0;
+    }
+
+    // getters for access to mappings
+    uint8_t get_in_assign(int ch) {
+      return mapping[ch].function;
+    }
+    uint8_t get_in_channel(int ch) {
+      return mapping[ch].channel;
+    }
+    int8_t get_in_transpose(int ch) {
+      return mapping[ch].transpose;
+    }
+    bool in_in_range(int ch, uint8_t note) {
+      return (note >= mapping[ch].range_low && note <= mapping[ch].range_high);
+    }
+
+    // TODO: MIDI output mappings... can we reuse the same struct?
+    uint8_t get_out_assign(int ch) {
+      return 0;
+    }
+    uint8_t get_out_channel(int ch) {
+      return 0;
+    }
+    int8_t get_out_transpose(int ch) {
+      return 0;
+    }
+    bool in_out_range(int ch, int note) {
+      return 0;
+    }
+
     void UpdateMidiChannelFilter() {
         uint16_t filter = 0;
         bool omni = false;
@@ -102,7 +152,7 @@ struct MIDIFrame {
     }
 
     bool CheckMidiChannelFilter(const uint8_t m_ch) {
-        return midi_channel_filter & (1 << m_ch);
+        return any_channel_omni || midi_channel_filter & (1 << m_ch);
     }
 
     void UpdateMaxPolyphony() { // find max voice number to determine how much to buffer
@@ -165,12 +215,12 @@ struct MIDIFrame {
     }
 
     void PolyBufferPush(const uint8_t m_ch, const uint8_t note, const uint8_t vel) {
-        if (CheckMidiChannelFilter(m_ch) || any_channel_omni)
+        if (CheckMidiChannelFilter(m_ch))
             WritePolyNoteData(note, vel, FindNextAvailPolyVoice(note));
     }
 
     void PolyBufferPop(const uint8_t m_ch, const uint8_t note) {
-        if (CheckMidiChannelFilter(m_ch) || any_channel_omni) {
+        if (CheckMidiChannelFilter(m_ch)) {
             for (uint8_t v = 0; v < max_voice; ++v) {
                 if (poly_buffer[v].note == note) ClearPolyVoice(v);
             }
@@ -193,14 +243,14 @@ struct MIDIFrame {
     }
 
     void MonoBufferPush(const uint8_t m_ch, const uint8_t note, const uint8_t vel) {
-        if (CheckMidiChannelFilter(m_ch) || any_channel_omni) {
+        if (CheckMidiChannelFilter(m_ch)) {
             RemoveNoteData(note_buffer[m_ch], note); // if new note is already in buffer, promote to latest and update velocity
             note_buffer[m_ch].push_back({note, vel}); // else just append to the end
         }
     }
 
     void MonoBufferPop(const uint8_t m_ch, const uint8_t note) {
-        if (CheckMidiChannelFilter(m_ch) || any_channel_omni) {
+        if (CheckMidiChannelFilter(m_ch)) {
             RemoveNoteData(note_buffer[m_ch], note);
             if (note_buffer[m_ch].size() == 0) note_buffer[m_ch].shrink_to_fit(); // free up memory when MIDI is not used
         }
@@ -266,14 +316,6 @@ struct MIDIFrame {
         return sustain_latch & (1 << m_ch);
     }
 
-    // Clock/Start/Stop are handled by ClockSetup applet
-    bool clock_run = 0;
-    bool clock_q;
-    bool start_q;
-    bool stop_q;
-    uint8_t clock_count; // MIDI clock counter (24ppqn)
-    uint32_t last_msg_tick; // Tick of last received message
-
     // MIDI output stuff
     int outchan[DAC_CHANNEL_COUNT] = {
         0, 0, 1, 1,
@@ -326,6 +368,8 @@ struct MIDIFrame {
     }
 
     void ProcessMIDIMsg(const uint8_t midi_chan, const uint8_t message, const uint8_t data1, const uint8_t data2) {
+        if (!CheckMidiChannelFilter(midi_chan)) return;
+
         switch (message) {
             case usbMIDI.Clock:
                 if (++clock_count == 1) {
@@ -707,6 +751,10 @@ struct IOFrame {
 
     /* MIDI message queue/cache */
     MIDIFrame MIDIState;
+
+    void Init() {
+      MIDIState.Init();
+    }
 
     // --- Soft IO ---
     void Out(DAC_CHANNEL channel, int value) {
