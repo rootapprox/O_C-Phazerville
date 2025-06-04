@@ -54,15 +54,25 @@ struct MIDIMapping {
   uint16_t semitone_mask; // which notes are currently on
   int16_t output; // translated CV values
 
+  void AdjustTranspose(int dir) {
+    transpose = constrain(transpose + dir, -24, 24);
+  }
+  void AdjustRangeLow(int dir) {
+    range_low = constrain(range_low + dir, 0, range_high);
+  }
+  void AdjustRangeHigh(int dir) {
+    range_high = constrain(range_high + dir, range_low, 127);
+  }
   uint64_t Pack() const {
-    return PackPackables(function_cc, function, channel, dac_polyvoice, transpose);
+    return PackPackables(function_cc, function, channel, dac_polyvoice, transpose, range_low, range_high);
   }
   void Unpack(uint64_t data) {
-    UnpackPackables(data, function_cc, function, channel, dac_polyvoice, transpose);
+    UnpackPackables(data, function_cc, function, channel, dac_polyvoice, transpose, range_low, range_high);
     // validation for safety
     if (function > HEM_MIDI_MAX_FUNCTION) function = 0;
     channel &= 0x1F;
     dac_polyvoice &= 0x0F;
+    if (range_high < range_low) range_high = range_low;
   }
 };
 
