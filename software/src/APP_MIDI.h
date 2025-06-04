@@ -98,9 +98,17 @@ const char* const midi_out_functions[12] = {
 { 127, 0, 127, "3 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
 { 127, 0, 127, "4 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },
 
-enum MIDI_IN_FUNCTION {
+enum CaptainsKeys : uint16_t {
+  SETUP_KEY = 0,
+
+  // upper 7 bits of mapping key
+  INPUT_MAP_KEY = 1 << 9,
+  OUTPUT_MAP_KEY = 2 << 9,
+};
+
+enum MIDI_IN_FUNCTION : uint8_t {
     MIDI_IN_OFF,
-    MIDI_IN_NOTE,
+    MIDI_IN_NOTE = HEM_MIDI_NOTE_OUT,
     MIDI_IN_GATE,
     MIDI_IN_TRIGGER,
     MIDI_IN_VELOCITY,
@@ -118,7 +126,7 @@ enum MIDI_IN_FUNCTION {
     MIDI_IN_CLOCK_24PPQN,
 };
 
-enum MIDI_OUT_FUNCTION {
+enum MIDI_OUT_FUNCTION : uint8_t {
     MIDI_OUT_OFF,
     MIDI_OUT_NOTE,
     MIDI_OUT_LEGATO,
@@ -233,7 +241,26 @@ public:
 #endif
     }
 
+    void Suspend() {
+        StoreData();
+        OnSendSysEx();
+    }
+    void StoreData() {
+#ifdef __IMXRT1062__
+        PhzConfig::setValue(SETUP_KEY, active_setup);
+        // TODO: save data to LFS
+        StoreSetup();
+
+        PhzConfig::save_config("CAPTAIN.DAT");
+#endif
+    }
     void Resume() {
+#ifdef __IMXRT1062__
+        PhzConfig::load_config("CAPTAIN.DAT");
+        uint64_t data = 0;
+        PhzConfig::getValue(SETUP_KEY, data);
+        active_setup = data;
+#endif
         SelectSetup(get_setup_number(), 0);
     }
 
@@ -274,12 +301,37 @@ public:
         else DrawLogScreen();
     }
 
+    void EncoderEdit(int dir) {
+#ifdef __IMXRT1062__
+      // TODO: 
+#else
+        change_value(cursor.cursor_pos(), dir);
+        ConstrainRangeValue(cursor.cursor_pos());
+#endif
+    }
+    void MoveCursor(int dir) {
+        cursor.Scroll(dir);
+    }
+
+#ifdef __IMXRT1062__
+    void StoreSetup() {
+        for (int i = 0; i < MIDIMAP_MAX; ++i) {
+          PhzConfig::setValue(INPUT_MAP_KEY + i + active_setup*MIDIMAP_MAX,
+              PackPackables(frame.MIDIState.mapping[i]));
+        }
+    }
+#endif
     void SelectSetup(int setup_number, int new_screen = -1) {
         // Stay the same if not provided
         if (new_screen == -1) new_screen = screen;
 
         // Reset if moving to another setup
-        if (setup_number != get_setup_number()) Reset();
+        if (setup_number != get_setup_number()) {
+#ifdef __IMXRT1062__
+          StoreSetup();
+#endif
+          Reset();
+        }
 
         // Find the cursor position, and new start and end menu items
         int prev_cursor = cursor.cursor_pos() - ((screen * 8) + (get_setup_number() * MIDI_PARAMETER_COUNT));
@@ -290,7 +342,14 @@ public:
         cursor.Init(start, end);
         cursor.Scroll(prev_cursor);
 #ifdef __IMXRT1062__
-        // TODO
+        active_setup = setup_number;
+        uint64_t data = 0;
+        for (int i = 0; i < MIDIMAP_MAX; ++i) {
+          if (!PhzConfig::getValue(INPUT_MAP_KEY + i + active_setup*MIDIMAP_MAX, data)) break;
+          UnpackPackables(data, frame.MIDIState.mapping[i]);
+
+          // TODO: recover other settings?
+        }
 #else
         values_[MIDI_CURRENT_SETUP] = setup_number;
 #endif
@@ -416,40 +475,41 @@ public:
        if (source == target) {
            OnSendSysEx();
        } else {
+#ifdef __IMXRT1062__
+          // TODO: bonk
+#else
            int source_offset = MIDI_PARAMETER_COUNT * source;
            int target_offset = MIDI_PARAMETER_COUNT * target;
            for (int c = 0; c < MIDI_PARAMETER_COUNT; c++)
            {
-#ifdef __IMXRT1062__
-        // TODO
-#else
                values_[target_offset + c] = values_[source_offset + c];
-#endif
            }
+#endif
            SelectSetup(target);
            Resume();
        }
        copy_mode = 0;
    }
 
+#ifdef __IMXRT1062__
+        // TODO?
+#else
    /* If the changed value is a high or low range, make sure that the high range doesn't go
     * below the low range, or that the low range doesn't go above the high range
     */
    void ConstrainRangeValue(int ix) {
        int page = ix / 8; // Page within a Setup
-#ifdef __IMXRT1062__
-        // TODO
-#else
        if (page == 4 && values_[ix] < values_[ix - 8]) values_[ix] = values_[ix - 8];
        if (page == 3 && values_[ix] > values_[ix + 8]) values_[ix] = values_[ix + 8];
-#endif
    }
+#endif
 
 private:
     // Housekeeping
     int screen; // 0=Assign 2=Channel 3=Transpose
     bool display; // 0=Setup Edit 1=Log
     bool copy_mode; // Copy mode on/off
+    int active_setup; // index of current setup
     int copy_setup_source; // Which setup is being copied?
     int copy_setup_target; // Which setup is being copied to?
 
@@ -489,7 +549,6 @@ private:
         {
             bool suppress = 0; // Don't show the setting if it's not relevant
             const int current = settings_list.Next(list_item);
-            const int value = get_value(current);
             int p = current % 8; // Menu position from 0-7
 
             // MIDI In and Out indicators for all screens
@@ -533,13 +592,25 @@ private:
             }
 
             // Draw the item last so that if it's selected, the icons are reversed, too
-            if (!suppress) list_item.DrawDefault(value, CaptainMIDI::value_attr(current));
-            else {
+            if (!suppress) {
+#ifdef __IMXRT1062__
+              DrawSetting(list_item, current);
+#else
+              const int value = get_value(current);
+              list_item.DrawDefault(value, CaptainMIDI::value_attr(current));
+#endif
+            } else {
                 list_item.SetPrintPos();
                 graphics.print("                   --");
                 list_item.DrawCustom();
             }
         }
+    }
+
+    void DrawSetting(OC::menu::SettingsListItem &list_item, int pos) {
+      // TODO
+      //const int value = get_value(pos);
+      //list_item.DrawDefault(value, CaptainMIDI::value_attr(pos));
     }
 
     void DrawLogScreen() {
@@ -587,7 +658,7 @@ private:
 
     int get_setup_number() {
 #ifdef __IMXRT1062__
-        // TODO
+        return active_setup;
 #else
         return values_[MIDI_CURRENT_SETUP];
 #endif
@@ -847,20 +918,20 @@ private:
 
 #ifdef __IMXRT1062__
     // TODO: these should be implemented in MIDIFrame
-    int get_in_assign(int ch) {
-      return 0;
+    uint8_t get_in_assign(int ch) {
+      return frame.MIDIState.get_in_assign(ch);
     }
 
-    int get_in_channel(int ch) {
-      return 0;
+    uint8_t get_in_channel(int ch) {
+      return frame.MIDIState.get_in_channel(ch);
     }
 
     int get_in_transpose(int ch) {
-      return 0;
+      return frame.MIDIState.get_in_transpose(ch);
     }
 
     bool in_in_range(int ch, int note) {
-      return 0;
+      return frame.MIDIState.in_in_range(ch, note);
     }
 
     int get_out_assign(int ch) {
@@ -987,7 +1058,10 @@ void MIDI_isr() {
 
 void MIDI_handleAppEvent(OC::AppEvent event) {
     if (event == OC::APP_EVENT_SUSPEND) {
-        captain_midi_instance.OnSendSysEx();
+      captain_midi_instance.Suspend();
+    }
+    if (event == OC::APP_EVENT_RESUME) {
+      captain_midi_instance.Resume();
     }
 }
 
@@ -1020,10 +1094,9 @@ void MIDI_handleButtonEvent(const UI::Event &event) {
 void MIDI_handleEncoderEvent(const UI::Event &event) {
     if (event.control == OC::CONTROL_ENCODER_R) {
         if (captain_midi_instance.cursor.editing()) {
-            captain_midi_instance.change_value(captain_midi_instance.cursor.cursor_pos(), event.value);
-            captain_midi_instance.ConstrainRangeValue(captain_midi_instance.cursor.cursor_pos());
+            captain_midi_instance.EncoderEdit(event.value);
         } else {
-            captain_midi_instance.cursor.Scroll(event.value);
+            captain_midi_instance.MoveCursor(event.value);
         }
     }
     if (event.control == OC::CONTROL_ENCODER_L) {
