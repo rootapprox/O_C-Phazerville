@@ -56,47 +56,76 @@ const char* const midi_out_functions[12] = {
     "--", "Note", "Leg.", "Veloc", "Mod", "Aft", "Bend", "Expr", "Pan", "Hold", "Brth", "yAxis"
 };
 
+const char* const midi2cv_label[] = {
+  "MIDI > A", "MIDI > B", "MIDI > C", "MIDI > D",
+  "MIDI > E", "MIDI > F", "MIDI > G", "MIDI > H",
+};
+const char* const cv2midi_label[] = {
+  "1 > MIDI", "2 > MIDI", "3 > MIDI", "4 > MIDI",
+  "5 > MIDI", "6 > MIDI", "7 > MIDI", "8 > MIDI",
+};
+
 #define MIDI_SETUP_PARAMETER_LIST \
-{ 0, 0, 16, "MIDI > A", midi_in_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > B", midi_in_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > C", midi_in_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > D", midi_in_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 11, "1 > MIDI", midi_out_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 11, "2 > MIDI", midi_out_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 11, "3 > MIDI", midi_out_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 11, "4 > MIDI", midi_out_functions, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > A", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > B", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > C", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "MIDI > D", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "1 > MIDI", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "2 > MIDI", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "3 > MIDI", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 16, "4 > MIDI", midi_channels, settings::STORAGE_TYPE_U8 },\
-{ 0, -24, 24, "MIDI > A", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "MIDI > B", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "MIDI > C", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "MIDI > D", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "1 > MIDI", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "2 > MIDI", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "3 > MIDI", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, -24, 24, "4 > MIDI", NULL, settings::STORAGE_TYPE_I8 },\
-{ 0, 0, 127, "MIDI > A", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > B", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > C", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > D", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "1 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "2 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "3 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "4 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > A", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > B", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > C", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 0, 0, 127, "MIDI > D", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 127, 0, 127, "1 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 127, 0, 127, "2 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 127, 0, 127, "3 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },\
-{ 127, 0, 127, "4 > MIDI", midi_note_numbers, settings::STORAGE_TYPE_U8 },
+{ 0, 0, 16, midi2cv_label[0], midi_in_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[1], midi_in_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[2], midi_in_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[3], midi_in_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 11, cv2midi_label[0], midi_out_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 11, cv2midi_label[1], midi_out_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 11, cv2midi_label[2], midi_out_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 11, cv2midi_label[3], midi_out_functions, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[0], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[1], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[2], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, midi2cv_label[3], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, cv2midi_label[0], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, cv2midi_label[1], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, cv2midi_label[2], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 16, cv2midi_label[3], midi_channels, settings::STORAGE_TYPE_U8 },\
+{ 0, -24, 24, midi2cv_label[0], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, midi2cv_label[1], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, midi2cv_label[2], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, midi2cv_label[3], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, cv2midi_label[0], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, cv2midi_label[1], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, cv2midi_label[2], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, -24, 24, cv2midi_label[3], NULL, settings::STORAGE_TYPE_I8 },\
+{ 0, 0, 127, midi2cv_label[0], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[1], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[2], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[3], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, cv2midi_label[0], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, cv2midi_label[1], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, cv2midi_label[2], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, cv2midi_label[3], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[0], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[1], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[2], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 0, 0, 127, midi2cv_label[3], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 127, 0, 127, cv2midi_label[0], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 127, 0, 127, cv2midi_label[1], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 127, 0, 127, cv2midi_label[2], midi_note_numbers, settings::STORAGE_TYPE_U8 },\
+{ 127, 0, 127, cv2midi_label[3], midi_note_numbers, settings::STORAGE_TYPE_U8 },
+
+#ifdef __IMXRT1062__
+// per channel
+const settings::value_attr CaptainSettings[] = {
+  // Assigned function
+  // MIDI-to-CV
+  { 0, 0, HEM_MIDI_MAX_FUNCTION, "", midi_fn_name, settings::STORAGE_TYPE_U8 },
+  // CV-to-MIDI
+  { 0, 0, 11, "", midi_out_functions, settings::STORAGE_TYPE_U8 },
+
+  // Channel
+  { 0, 0, 16, "", midi_channels, settings::STORAGE_TYPE_U8 },
+  // Transpose
+  { 0, -24, 24, "", NULL, settings::STORAGE_TYPE_I8 },
+  // Range Low
+  { 0, 0, 127, "", midi_note_numbers, settings::STORAGE_TYPE_U8 },
+  // Range High
+  { 0, 0, 127, "", midi_note_numbers, settings::STORAGE_TYPE_U8 },
+};
+#endif
 
 enum CaptainsKeys : uint16_t {
   SETUP_KEY = 0,
@@ -109,18 +138,27 @@ enum CaptainsKeys : uint16_t {
 enum MIDI_IN_FUNCTION : uint8_t {
     MIDI_IN_OFF,
     MIDI_IN_NOTE = HEM_MIDI_NOTE_OUT,
-    MIDI_IN_GATE,
-    MIDI_IN_TRIGGER,
-    MIDI_IN_VELOCITY,
-    MIDI_IN_MOD,
-    MIDI_IN_AFTERTOUCH,
-    MIDI_IN_PITCHBEND,
+    MIDI_IN_GATE = HEM_MIDI_GATE_OUT,
+    MIDI_IN_TRIGGER = HEM_MIDI_TRIG_OUT,
+    MIDI_IN_VELOCITY = HEM_MIDI_VEL_OUT,
+    MIDI_IN_MOD = HEM_MIDI_CC_OUT,
+    MIDI_IN_AFTERTOUCH = HEM_MIDI_AT_CHAN_OUT,
+    MIDI_IN_PITCHBEND = HEM_MIDI_PB_OUT,
+    /*
+    if (in_fn == MIDI_IN_EXPRESSION) cc = 11;
+    if (in_fn == MIDI_IN_PAN) cc = 10;
+    if (in_fn == MIDI_IN_HOLD) cc = 64;
+    if (in_fn == MIDI_IN_BREATH) cc = 2;
+    if (in_fn == MIDI_IN_Y_AXIS) cc = 74;
+    */
     MIDI_IN_EXPRESSION,
     MIDI_IN_PAN,
     MIDI_IN_HOLD,
     MIDI_IN_BREATH,
     MIDI_IN_Y_AXIS,
-    MIDI_IN_CLOCK_4TH,
+
+    // clock divisions
+    MIDI_IN_CLOCK_4TH = HEM_MIDI_CLOCK_OUT,
     MIDI_IN_CLOCK_8TH,
     MIDI_IN_CLOCK_16TH,
     MIDI_IN_CLOCK_24PPQN,
@@ -218,19 +256,21 @@ class CaptainMIDI : public HSApplication, public SystemExclusiveHandler
 public:
     static constexpr int MIDI_INDICATOR_COUNTDOWN = 2000;
 
-    //uint8_t CaptainSettings[MIDI_SETUP_COUNT][MIDI_PARAMETER_COUNT];
     OC::menu::ScreenCursor<OC::menu::kScreenLines> cursor;
 
     void Start() {
         screen = 0;
         display = 0;
-        cursor.Init(0, 7);
+        cursor.Init(0, ADC_CHANNEL_COUNT + DAC_CHANNEL_COUNT - 1);
         log_index = 0;
         log_view = 0;
         Reset();
 
+        // default everything off
+        for (int i = 0; i < MIDIMAP_MAX; ++i) {
+          frame.MIDIState.mapping[i].function = HEM_MIDI_NOOP;
+        }
 #ifdef __IMXRT1062__
-        // TODO
 #else
         // Go through all the Setups and change the default high ranges to G9
         for (int s = 0; s < MIDI_SETUP_COUNT; s++)
@@ -248,9 +288,7 @@ public:
     void StoreData() {
 #ifdef __IMXRT1062__
         PhzConfig::setValue(SETUP_KEY, active_setup);
-        // TODO: save data to LFS
         StoreSetup();
-
         PhzConfig::save_config("CAPTAIN.DAT");
 #endif
     }
@@ -285,10 +323,12 @@ public:
 
             MIDIMapping &map = frame.MIDIState.mapping[ch];
 
-            // TODO: check setting to avoid defeating ClockOut
-            if (map.trigout_q) {
-              ClockOut(ch);
-              map.trigout_q = 0;
+            if (map.IsTrigger()) {
+              if (map.trigout_q) {
+                ClockOut(ch);
+                map.trigout_q = 0;
+              }
+              // else, do nothing
             } else {
               Out(ch, map.output);
             }
@@ -303,7 +343,29 @@ public:
 
     void EncoderEdit(int dir) {
 #ifdef __IMXRT1062__
-      // TODO: 
+      int pos = cursor.cursor_pos();
+      MIDIMapping &m = (pos < DAC_CHANNEL_COUNT) ?
+          frame.MIDIState.mapping[pos] :
+          frame.MIDIState.outmap[pos - DAC_CHANNEL_COUNT];
+
+        switch (screen) {
+          case 0:
+            m.function = constrain(m.function + dir, 0, HEM_MIDI_MAX_FUNCTION);
+            break;
+          case 1:
+            m.channel = constrain(m.channel + dir, 0, 16);
+            break;
+          case 2:
+            m.AdjustTranspose(dir);
+            break;
+          case 3:
+            m.AdjustRangeLow(dir);
+            break;
+          case 4:
+            m.AdjustRangeHigh(dir);
+            break;
+          default: break;
+        }
 #else
         change_value(cursor.cursor_pos(), dir);
         ConstrainRangeValue(cursor.cursor_pos());
@@ -319,20 +381,45 @@ public:
           PhzConfig::setValue(INPUT_MAP_KEY + i + active_setup*MIDIMAP_MAX,
               PackPackables(frame.MIDIState.mapping[i]));
         }
+        for (int i = 0; i < ADC_CHANNEL_COUNT; ++i) {
+          PhzConfig::setValue(OUTPUT_MAP_KEY + i + active_setup*ADC_CHANNEL_COUNT,
+              PackPackables(frame.MIDIState.outmap[i]));
+        }
     }
 #endif
     void SelectSetup(int setup_number, int new_screen = -1) {
-        // Stay the same if not provided
-        if (new_screen == -1) new_screen = screen;
-
-        // Reset if moving to another setup
+        // moving to another setup?
         if (setup_number != get_setup_number()) {
 #ifdef __IMXRT1062__
+          // store current settings
           StoreSetup();
+
+          // Load from config file
+          active_setup = setup_number;
+          uint64_t data = 0;
+          for (int i = 0; i < MIDIMAP_MAX; ++i) {
+            if (!PhzConfig::getValue(INPUT_MAP_KEY + i + active_setup*MIDIMAP_MAX, data)) {
+              frame.MIDIState.Init();
+              break;
+            }
+            UnpackPackables(data, frame.MIDIState.mapping[i]);
+          }
+          for (int i = 0; i < ADC_CHANNEL_COUNT; ++i) {
+            if (!PhzConfig::getValue(OUTPUT_MAP_KEY + i + active_setup*ADC_CHANNEL_COUNT, data)) {
+              frame.MIDIState.Init();
+              break;
+            }
+            UnpackPackables(data, frame.MIDIState.outmap[i]);
+          }
 #endif
           Reset();
         }
 
+        // Screen switching, default to same
+        if (new_screen == -1) new_screen = screen;
+
+#ifdef __IMXRT1062__
+#else
         // Find the cursor position, and new start and end menu items
         int prev_cursor = cursor.cursor_pos() - ((screen * 8) + (get_setup_number() * MIDI_PARAMETER_COUNT));
         int start = (new_screen * 8) + (setup_number * MIDI_PARAMETER_COUNT);
@@ -341,16 +428,7 @@ public:
         // And go to there
         cursor.Init(start, end);
         cursor.Scroll(prev_cursor);
-#ifdef __IMXRT1062__
-        active_setup = setup_number;
-        uint64_t data = 0;
-        for (int i = 0; i < MIDIMAP_MAX; ++i) {
-          if (!PhzConfig::getValue(INPUT_MAP_KEY + i + active_setup*MIDIMAP_MAX, data)) break;
-          UnpackPackables(data, frame.MIDIState.mapping[i]);
 
-          // TODO: recover other settings?
-        }
-#else
         values_[MIDI_CURRENT_SETUP] = setup_number;
 #endif
         screen = new_screen;
@@ -391,7 +469,7 @@ public:
             indicator_out[ch] = 0;
             Out(ch, 0);
         }
-        clock_count = 0;
+        frame.MIDIState.clock_count = 0;
     }
 
     void Panic() {
@@ -401,7 +479,7 @@ public:
         // Send all notes off on every channel
         for (int note = 0; note < 128; note++)
         {
-            for (int channel = 1; channel <= 16; channel++)
+            for (int channel = 0; channel < 16; channel++)
             {
                 hMIDI.SendNoteOff(channel, note);
             }
@@ -476,7 +554,17 @@ public:
            OnSendSysEx();
        } else {
 #ifdef __IMXRT1062__
-          // TODO: bonk
+          uint64_t data = 0;
+          for (int i = 0; i < MIDIMAP_MAX; ++i) {
+            if (!PhzConfig::getValue(INPUT_MAP_KEY + i + source*MIDIMAP_MAX, data))
+              break;
+            PhzConfig::setValue(INPUT_MAP_KEY + i + target*MIDIMAP_MAX, data);
+          }
+          for (int i = 0; i < ADC_CHANNEL_COUNT; ++i) {
+            if (!PhzConfig::getValue(OUTPUT_MAP_KEY + i + source*ADC_CHANNEL_COUNT, data))
+              break;
+            PhzConfig::setValue(OUTPUT_MAP_KEY + i + target*ADC_CHANNEL_COUNT, data);
+          }
 #else
            int source_offset = MIDI_PARAMETER_COUNT * source;
            int target_offset = MIDI_PARAMETER_COUNT * target;
@@ -506,7 +594,7 @@ public:
 
 private:
     // Housekeeping
-    int screen; // 0=Assign 2=Channel 3=Transpose
+    int screen; // 0=Assign, 1=Channel, 2=Transpose, 3=Range Low, 4=Range High
     bool display; // 0=Setup Edit 1=Log
     bool copy_mode; // Copy mode on/off
     int active_setup; // index of current setup
@@ -518,27 +606,28 @@ private:
     int log_view; // Current index for viewing
 
     // MIDI In
-    uint8_t mapidx[DAC_CHANNEL_COUNT];
-    // TODO: replace with semitone_mask
-    int note_in[4]; // Up to four notes at a time are kept track of with MIDI In
+    // TODO: replace with data from MIDIFrame
+    int note_in[DAC_CHANNEL_COUNT]; // track active note per DAC channel
     uint16_t indicator_in[DAC_CHANNEL_COUNT]; // A MIDI indicator will display next to MIDI In assignment
-    uint8_t clock_count; // MIDI clock counter (24ppqn)
 
     // MIDI Out
-    bool gated[4]; // Current gated status of each input
-    int note_out[4]; // Most recent note from this input channel
-    int last_channel[4]; // Keep track of the actual send channel, in case it's changed while the note is on
-    int legato_on[4]; // The note handler may currently respond to legato note changes
-    uint16_t indicator_out[4]; // A MIDI indicator will display next to MIDI Out assignment
+    bool gated[ADC_CHANNEL_COUNT]; // Current gated status of each input
+    int note_out[ADC_CHANNEL_COUNT]; // Most recent note from this input channel
+    int last_channel[ADC_CHANNEL_COUNT]; // Keep track of the actual send channel, in case it's changed while the note is on
+    int legato_on[ADC_CHANNEL_COUNT]; // The note handler may currently respond to legato note changes
+    uint16_t indicator_out[ADC_CHANNEL_COUNT]; // A MIDI indicator will display next to MIDI Out assignment
 
     void DrawSetupScreens() {
         // Create the header, showing the current Setup and Screen name
         gfxHeader("");
-        if (screen == 0) graphics.print("MIDI Assign");
-        if (screen == 1) graphics.print("MIDI Channel");
-        if (screen == 2) graphics.print("Transpose");
-        if (screen == 3) graphics.print("Range Low");
-        if (screen == 4) graphics.print("Range High");
+        switch (screen) {
+          case 0: graphics.print("MIDI Assign"); break;
+          case 1: graphics.print("MIDI Channel"); break;
+          case 2: graphics.print("Transpose"); break;
+          case 3: graphics.print("Range Low"); break;
+          case 4: graphics.print("Range High"); break;
+          default: break;
+        }
         gfxPrint(128 - 42, 1, "Setup ");
         gfxPrint(get_setup_number() + 1);
 
@@ -549,12 +638,15 @@ private:
         {
             bool suppress = 0; // Don't show the setting if it's not relevant
             const int current = settings_list.Next(list_item);
-            int p = current % 8; // Menu position from 0-7
+            int p = current % (DAC_CHANNEL_COUNT+ADC_CHANNEL_COUNT);
 
             // MIDI In and Out indicators for all screens
-            if (p < 4) { // It's a MIDI In assignment
+            if (p < DAC_CHANNEL_COUNT) { // It's a MIDI In assignment
+                int in_fn = get_in_assign(p);
+                if (in_fn == MIDI_IN_OFF && screen > 0) suppress = 1;
+
                 if (indicator_in[p] > 0 || note_in[p] > -1) {
-                    if (get_in_assign(p) == MIDI_IN_NOTE) {
+                    if (in_fn == MIDI_IN_NOTE) {
                         if (note_in[p] > -1) {
                             graphics.setPrintPos(70, list_item.y + 2);
                             graphics.print(midi_note_numbers[note_in[p]]);
@@ -563,21 +655,25 @@ private:
                 }
 
                 // Indicate if the assignment is a note type
-                if (get_in_channel(p) > 0 && get_in_assign(p) == MIDI_IN_NOTE)
+                if (in_fn == MIDI_IN_NOTE)
                     graphics.drawBitmap8(56, list_item.y + 1, 8, MIDI_note_icon);
                 else if (screen > 1) suppress = 1;
 
                 // Indicate if the assignment is a clock
-                if (get_in_assign(p) >= MIDI_IN_CLOCK_4TH) {
-                    uint8_t o_x = (clock_count < 12) ? 2 : 0;
+                if (in_fn >= MIDI_IN_CLOCK_4TH) {
+                    uint8_t o_x = (frame.MIDIState.clock_count < 12) ? 2 : 0;
                     graphics.drawBitmap8(80 + o_x, list_item.y + 1, 8, MIDI_clock_icon);
                     if (screen > 0) suppress = 1;
                 }
 
             } else { // It's a MIDI Out assignment
-                p -= 4;
+                p -= DAC_CHANNEL_COUNT;
+                int out_fn = get_out_assign(p);
+
+                if (out_fn == MIDI_OUT_OFF && screen > 0) suppress = 1;
+
                 if (indicator_out[p] > 0 || note_out[p] > -1) {
-                    if ((get_out_assign(p) == MIDI_OUT_NOTE || get_out_assign(p) == MIDI_OUT_LEGATO)) {
+                    if (out_fn == MIDI_OUT_NOTE || out_fn == MIDI_OUT_LEGATO) {
                         if (note_out[p] > -1) {
                             graphics.setPrintPos(70, list_item.y + 2);
                             graphics.print(midi_note_numbers[note_out[p]]);
@@ -586,7 +682,7 @@ private:
                 }
 
                 // Indicate if the assignment is a note type
-                if (get_out_channel(p) > 0 && (get_out_assign(p) == MIDI_OUT_NOTE || get_out_assign(p) == MIDI_OUT_LEGATO))
+                if (out_fn == MIDI_OUT_NOTE || out_fn == MIDI_OUT_LEGATO)
                     graphics.drawBitmap8(56, list_item.y + 1, 8, MIDI_note_icon);
                 else if (screen > 1) suppress = 1;
             }
@@ -594,10 +690,14 @@ private:
             // Draw the item last so that if it's selected, the icons are reversed, too
             if (!suppress) {
 #ifdef __IMXRT1062__
-              DrawSetting(list_item, current);
+              const int idx = (current < DAC_CHANNEL_COUNT && screen == 0) ? 0 : screen + 1;
+              list_item.SetPrintPos();
+              graphics.print(current < DAC_CHANNEL_COUNT ?
+                  midi2cv_label[current] :
+                  cv2midi_label[current - DAC_CHANNEL_COUNT]);
+              list_item.DrawDefault(GetValue(current), CaptainSettings[idx]);
 #else
-              const int value = get_value(current);
-              list_item.DrawDefault(value, CaptainMIDI::value_attr(current));
+              list_item.DrawDefault(get_value(current), CaptainMIDI::value_attr(current));
 #endif
             } else {
                 list_item.SetPrintPos();
@@ -607,10 +707,19 @@ private:
         }
     }
 
-    void DrawSetting(OC::menu::SettingsListItem &list_item, int pos) {
-      // TODO
-      //const int value = get_value(pos);
-      //list_item.DrawDefault(value, CaptainMIDI::value_attr(pos));
+    // The value of the parameter at the given cursor position
+    int GetValue(int pos) {
+      MIDIMapping &m = (pos < DAC_CHANNEL_COUNT) ?
+          frame.MIDIState.mapping[pos] :
+          frame.MIDIState.outmap[pos - DAC_CHANNEL_COUNT];
+      switch (screen) {
+        case 0: return m.function;
+        case 1: return m.channel;
+        case 2: return m.transpose;
+        case 3: return m.range_low;
+        case 4: return m.range_high;
+        default: return 0;
+      }
     }
 
     void DrawLogScreen() {
@@ -664,13 +773,15 @@ private:
 #endif
     }
 
+    // CV inputs translated to MIDI messages
     void midi_out() {
         auto &hMIDI = HS::frame.MIDIState;
-        for (int ch = 0; ch < DAC_CHANNEL_COUNT; ch++)
+        for (int ch = 0; ch < ADC_CHANNEL_COUNT; ch++)
         {
             int out_fn = get_out_assign(ch);
+            if (out_fn == MIDI_OUT_OFF) continue;
+
             int out_ch = get_out_channel(ch);
-            if (out_ch == 0) continue;
             bool indicator = 0;
 
             if (out_fn == MIDI_OUT_NOTE || out_fn == MIDI_OUT_LEGATO) {
@@ -786,13 +897,9 @@ private:
         }
     }
 
+    [[ deprecated ]]
     void process_midi_in(int message, int channel, int data1, int data2) {
       // TODO: verify all this is now handled within HS::MIDIState, MIDIMapping
-
-        // Listen for incoming clock
-        if (message == HEM_MIDI_CLOCK) {
-            if (++clock_count >= 24) clock_count = 0;
-        }
 
         bool note_captured = 0; // A note or gate should only be captured by
         bool gate_captured = 0; // one assignment, to allow polyphony in the interface
@@ -895,7 +1002,7 @@ private:
             if (in_fn >= MIDI_IN_CLOCK_4TH) {
                 // Clock is unlogged because there can be a lot of it
                 uint8_t mod = get_clock_mod(in_fn);
-                if (clock_count % mod == 0) ClockOut(ch);
+                if (frame.MIDIState.clock_count % mod == 0) ClockOut(ch);
             }
 
             #ifdef MIDI_DIAGNOTIC
@@ -917,7 +1024,6 @@ private:
     }
 
 #ifdef __IMXRT1062__
-    // TODO: these should be implemented in MIDIFrame
     uint8_t get_in_assign(int ch) {
       return frame.MIDIState.get_in_assign(ch);
     }
@@ -926,7 +1032,7 @@ private:
       return frame.MIDIState.get_in_channel(ch);
     }
 
-    int get_in_transpose(int ch) {
+    int8_t get_in_transpose(int ch) {
       return frame.MIDIState.get_in_transpose(ch);
     }
 
@@ -934,20 +1040,20 @@ private:
       return frame.MIDIState.in_in_range(ch, note);
     }
 
-    int get_out_assign(int ch) {
-      return 0;
+    uint8_t get_out_assign(int ch) {
+      return frame.MIDIState.get_out_assign(ch);
     }
 
-    int get_out_channel(int ch) {
-      return 0;
+    uint8_t get_out_channel(int ch) {
+      return frame.MIDIState.get_out_channel(ch);
     }
 
-    int get_out_transpose(int ch) {
-      return 0;
+    int8_t get_out_transpose(int ch) {
+      return frame.MIDIState.get_out_transpose(ch);
     }
 
     bool in_out_range(int ch, int note) {
-      return 0;
+      return frame.MIDIState.in_out_range(ch, note);
     }
 #else
     int get_in_assign(int ch) {

@@ -54,6 +54,11 @@ struct MIDIMapping {
   uint16_t semitone_mask; // which notes are currently on
   int16_t output; // translated CV values
 
+  const bool IsTrigger() const {
+    return (function == HEM_MIDI_TRIG_OUT
+         || function == HEM_MIDI_TRIG_1ST_OUT
+         || function == HEM_MIDI_TRIG_ALWAYS_OUT);
+  }
   void AdjustTranspose(int dir) {
     transpose = constrain(transpose + dir, -24, 24);
   }
@@ -72,6 +77,7 @@ struct MIDIMapping {
     if (function > HEM_MIDI_MAX_FUNCTION) function = 0;
     channel &= 0x1F;
     dac_polyvoice &= 0x0F;
+    if (range_low == 0 && range_high == 0) range_high = 127;
     if (range_high < range_low) range_high = range_low;
   }
 };
@@ -85,6 +91,7 @@ using NoteBuffer = std::vector<MIDINoteData>;
 
 struct MIDIFrame {
     MIDIMapping mapping[MIDIMAP_MAX];
+    MIDIMapping outmap[ADC_CHANNEL_COUNT];
 
     // MIDI input stuff handled by MIDIIn applet
     NoteBuffer note_buffer[16]; // note buffer to track all held notes on all channels
@@ -118,6 +125,13 @@ struct MIDIFrame {
         mapping[ch].range_low = 0;
         mapping[ch].range_high = 127;
       }
+      for (int ch = 0; ch < ADC_CHANNEL_COUNT; ++ch) {
+        outmap[ch].function = 0;
+        outmap[ch].transpose = 0;
+        outmap[ch].output = 0;
+        outmap[ch].range_low = 0;
+        outmap[ch].range_high = 127;
+      }
       clock_count = 0;
     }
 
@@ -135,18 +149,17 @@ struct MIDIFrame {
       return (note >= mapping[ch].range_low && note <= mapping[ch].range_high);
     }
 
-    // TODO: MIDI output mappings... can we reuse the same struct?
     uint8_t get_out_assign(int ch) {
-      return 0;
+      return outmap[ch].function;
     }
     uint8_t get_out_channel(int ch) {
-      return 0;
+      return outmap[ch].channel;
     }
     int8_t get_out_transpose(int ch) {
-      return 0;
+      return outmap[ch].transpose;
     }
     bool in_out_range(int ch, int note) {
-      return 0;
+      return (note >= outmap[ch].range_low && note <= outmap[ch].range_high);
     }
 
     void UpdateMidiChannelFilter() {
