@@ -18,8 +18,8 @@ namespace HS {
 
 static constexpr int GATE_THRESHOLD = 15 << 7; // 1.25 volts
 static constexpr int MIDIMAP_MAX = 32;
-static constexpr int TRIGMAP_MAX = OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST + DAC_CHANNEL_COUNT + MIDIMAP_MAX;
-static constexpr int CVMAP_MAX = ADC_CHANNEL_LAST + DAC_CHANNEL_COUNT + MIDIMAP_MAX;
+static constexpr int TRIGMAP_MAX = OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_COUNT + DAC_CHANNEL_COUNT + MIDIMAP_MAX;
+static constexpr int CVMAP_MAX = ADC_CHANNEL_COUNT + DAC_CHANNEL_COUNT + MIDIMAP_MAX;
 
 struct MIDILogEntry {
     uint8_t message;
@@ -687,23 +687,23 @@ struct IOFrame {
     uint8_t clockskip[DAC_CHANNEL_COUNT] = {0};
 
     // pre-calculated clocks, subject to trigger mapping
-    bool clocked[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
+    bool clocked[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_COUNT];
 
     // physical input state cache
-    bool gate_high[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_LAST];
-    int inputs[ADC_CHANNEL_LAST];
+    bool gate_high[OC::DIGITAL_INPUT_LAST + ADC_CHANNEL_COUNT];
+    int inputs[ADC_CHANNEL_COUNT];
 
     // output value cache, countdowns
     int outputs[DAC_CHANNEL_COUNT];
     int output_diff[DAC_CHANNEL_COUNT];
     int outputs_smooth[DAC_CHANNEL_COUNT];
     int clock_countdown[DAC_CHANNEL_COUNT];
-    int adc_lag_countdown[ADC_CHANNEL_LAST]; // Time between a clock event and an ADC read event
+    int adc_lag_countdown[ADC_CHANNEL_COUNT]; // Time between a clock event and an ADC read event
     // calculated values
-    uint32_t last_clock[ADC_CHANNEL_LAST]; // Tick number of the last clock observed by the child class
-    uint32_t cycle_ticks[ADC_CHANNEL_LAST]; // Number of ticks between last two clocks
-    bool changed_cv[ADC_CHANNEL_LAST]; // Has the input changed by more than 1/8 semitone since the last read?
-    int last_cv[ADC_CHANNEL_LAST]; // For change detection
+    uint32_t last_clock[ADC_CHANNEL_COUNT]; // Tick number of the last clock observed by the child class
+    uint32_t cycle_ticks[ADC_CHANNEL_COUNT]; // Number of ticks between last two clocks
+    bool changed_cv[ADC_CHANNEL_COUNT]; // Has the input changed by more than 1/8 semitone since the last read?
+    int last_cv[ADC_CHANNEL_COUNT]; // For change detection
 
     /* MIDI message queue/cache */
     MIDIFrame MIDIState;
