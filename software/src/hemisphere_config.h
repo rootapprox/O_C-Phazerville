@@ -103,6 +103,8 @@
 #include "applets/hMIDIIn.h"
 #include "applets/hMIDIOut.h"
 
+#include "applets/JoyStyx.h"
+
 template<class A>
 struct DeclareApplet {
   const int id;
@@ -185,7 +187,7 @@ AppletRegistry reg{
     DeclareApplet<ProbabilityDivider>{59, 0x04},
     DeclareApplet<ProbabilityMelody>{62, 0x04},
     DeclareApplet<ResetClock>{70, 0x14},
-    DeclareApplet<RndWalk>{69, 0x01},
+    DeclareApplet<RndWalk>{69, 0x01}, // nice
     DeclareApplet<RunglBook>{44, 0x01},
     DeclareApplet<ScaleDuet>{26, 0x08},
     DeclareApplet<Schmitt>{40, 0x40},
@@ -218,6 +220,7 @@ AppletRegistry reg{
 #ifdef PEWPEWPEW
     DeclareApplet<WTVCO>{67, 0x80},
 #endif
+    DeclareApplet<JoyStyx>{81, 0x80},
 };
 
 
