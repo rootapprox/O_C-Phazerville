@@ -13,7 +13,10 @@
 #include "HSMIDI.h"
 #include "HSUtils.h"
 #include "OC_DAC.h"
-#include "HSJoystick.h"
+
+#ifdef ARDUINO_TEENSY41
+#include "HSGamepad.h"
+#endif
 
 namespace HS {
 
@@ -767,10 +770,8 @@ struct MIDIFrame {
     }
 };
 
+#ifdef ARDUINO_TEENSY41
 struct GamepadFrame {
-    // connect PS3 controller to a PC and use Sixaxis Pair Tool to set or determine this address
-    // changing address will break association to your PS3
-    uint8_t ps3_address[6] = {0x1a, 0x2b, 0x3c, 0x01, 0x01, 0x01};
     bool ps3_paired = false;
 
     uint32_t button_mask = 0;
@@ -784,6 +785,7 @@ struct GamepadFrame {
     bool set_rumble = false;
     bool set_leds = false;
 };
+#endif
 
 // shared IO Frame, updated every tick
 // this will allow chaining applets together, multiple stages of processing
@@ -814,7 +816,9 @@ struct IOFrame {
     /* MIDI message queue/cache */
     MIDIFrame MIDIState;
 
+#ifdef ARDUINO_TEENSY41
     GamepadFrame GpState;
+#endif
 
     void Init() {
       MIDIState.Init();

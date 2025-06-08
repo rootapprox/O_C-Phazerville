@@ -44,7 +44,7 @@
 #endif
 #ifdef ARDUINO_TEENSY41
 #include "hemisphere_audio_config.h"
-#include "HSJoystick.h"
+#include "HSGamepad.h"
 #endif
 
 #ifdef ENABLE_APP_CALIBR8OR
@@ -587,10 +587,6 @@ public:
         }
     }
 
-#if defined(ARDUINO_TEENSY41)
-      void ProcessJoystick(JoystickController &device) { }
-#endif
-
     void Controller() {
         // top-level MIDI-to-CV handling - alters frame outputs
 #if defined(__IMXRT1062__)
@@ -599,7 +595,7 @@ public:
         thisUSB.Task();
         ProcessMIDI(usbHostMIDI, usbMIDI, MIDI1);
         ProcessMIDI(MIDI1, usbMIDI, usbHostMIDI);
-        ProcessJoystick(gamepad);
+        ProcessGamepad(gamepad);
   #else
         ProcessMIDI(usbMIDI, usbHostMIDI);
         thisUSB.Task();
