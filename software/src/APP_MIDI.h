@@ -159,9 +159,9 @@ enum MIDI_IN_FUNCTION : uint8_t {
 
     // clock divisions
     MIDI_IN_CLOCK_4TH = HEM_MIDI_CLOCK_OUT,
-    MIDI_IN_CLOCK_8TH,
-    MIDI_IN_CLOCK_16TH,
-    MIDI_IN_CLOCK_24PPQN,
+    MIDI_IN_CLOCK_8TH = HEM_MIDI_CLOCK_8_OUT,
+    MIDI_IN_CLOCK_16TH = HEM_MIDI_CLOCK_16_OUT,
+    MIDI_IN_CLOCK_24PPQN = HEM_MIDI_CLOCK_24_OUT,
 };
 
 enum MIDI_OUT_FUNCTION : uint8_t {
@@ -999,13 +999,7 @@ private:
                 indicator = 1;
             }
 
-            if (in_fn >= MIDI_IN_CLOCK_4TH) {
-                // Clock is unlogged because there can be a lot of it
-                uint8_t mod = get_clock_mod(in_fn);
-                if (frame.MIDIState.clock_count % mod == 0) ClockOut(ch);
-            }
-
-            #ifdef MIDI_DIAGNOTIC
+            #ifdef MIDI_DIAGNOSTIC
             if (message > 0) {
                 UpdateLog(1, ch, 6, message, data1, data2);
             }
@@ -1013,14 +1007,6 @@ private:
 
             if (indicator) indicator_in[ch] = MIDI_INDICATOR_COUNTDOWN;
         }
-    }
-
-    uint8_t get_clock_mod(int fn) {
-        uint8_t mod = 1;
-        if (fn == MIDI_IN_CLOCK_4TH) mod = 24;
-        if (fn == MIDI_IN_CLOCK_8TH) mod = 12;
-        if (fn == MIDI_IN_CLOCK_16TH) mod = 6;
-        return mod;
     }
 
 #ifdef __IMXRT1062__

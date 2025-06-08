@@ -54,11 +54,31 @@ struct MIDIMapping {
   uint16_t semitone_mask; // which notes are currently on
   int16_t output; // translated CV values
 
+  const bool IsClock() const {
+    return (function >= HEM_MIDI_CLOCK_OUT);
+  }
   const bool IsTrigger() const {
     return (function == HEM_MIDI_TRIG_OUT
          || function == HEM_MIDI_TRIG_1ST_OUT
-         || function == HEM_MIDI_TRIG_ALWAYS_OUT);
+         || function == HEM_MIDI_TRIG_ALWAYS_OUT
+         || function == HEM_MIDI_START_OUT
+         || IsClock());
   }
+  constexpr int clock_mod() const {
+    uint8_t mod = 1;
+    if (function == HEM_MIDI_CLOCK_OUT) mod = 24;
+    if (function == HEM_MIDI_CLOCK_8_OUT) mod = 12;
+    if (function == HEM_MIDI_CLOCK_16_OUT) mod = 6;
+    return mod;
+  }
+  void ProcessClock(int count) {
+    if (IsClock() && (count % clock_mod() == 1))
+      trigout_q = 1;
+  }
+  const bool InRange(uint8_t note) const {
+    return (note >= range_low && note <= range_high);
+  }
+
   void AdjustTranspose(int dir) {
     transpose = constrain(transpose + dir, -24, 24);
   }
@@ -146,7 +166,7 @@ struct MIDIFrame {
       return mapping[ch].transpose;
     }
     bool in_in_range(int ch, uint8_t note) {
-      return (note >= mapping[ch].range_low && note <= mapping[ch].range_high);
+      return mapping[ch].InRange(note);
     }
 
     uint8_t get_out_assign(int ch) {
@@ -390,20 +410,19 @@ struct MIDIFrame {
         last_msg_tick = OC::CORE::ticks;
     }
 
+    // arguments are raw data from MIDI system, so midi_chan starts at 1 (not 0)
     void ProcessMIDIMsg(const uint8_t midi_chan, const uint8_t message, const uint8_t data1, const uint8_t data2) {
-        if (!CheckMidiChannelFilter(midi_chan)) return;
+        const uint8_t m_ch = midi_chan - 1;
+        if (!CheckMidiChannelFilter(m_ch)) return;
 
         switch (message) {
             case usbMIDI.Clock:
-                if (++clock_count == 1) {
-                    clock_q = 1;
-                    for(int ch = 0; ch < MIDIMAP_MAX; ++ch) {
-                        if (mapping[ch].function == HEM_MIDI_CLOCK_OUT) {
-                            mapping[ch].trigout_q = 1;
-                        }
-                    }
+                clock_q = 1;
+                ++clock_count;
+                for(int ch = 0; ch < MIDIMAP_MAX; ++ch) {
+                  mapping[ch].ProcessClock(clock_count);
                 }
-                if (clock_count == HEM_MIDI_CLOCK_DIVISOR) clock_count = 0;
+                if (clock_count == 24) clock_count = 0;
                 return;
                 break;
 
@@ -439,13 +458,13 @@ struct MIDIFrame {
                 break;
 
             case usbMIDI.NoteOn:
-                MonoBufferPush(midi_chan-1, data1, data2);
-                PolyBufferPush(midi_chan-1, data1, data2);
+                MonoBufferPush(m_ch, data1, data2);
+                PolyBufferPush(m_ch, data1, data2);
                 break;
 
             case usbMIDI.NoteOff:
-                MonoBufferPop(midi_chan-1, data1);
-                PolyBufferPop(midi_chan-1, data1);
+                MonoBufferPop(m_ch, data1);
+                PolyBufferPop(m_ch, data1);
                 break;
         }
 
@@ -457,7 +476,6 @@ struct MIDIFrame {
             if (map.function == HEM_MIDI_NOOP) continue;
 
             // skip unwanted MIDI Channels
-            uint8_t m_ch = midi_chan - 1;
             if (map.channel != m_ch && map.channel != 16) continue;
 
             last_midi_channel = m_ch;
@@ -471,6 +489,7 @@ struct MIDIFrame {
 
             switch (message) {
                 case usbMIDI.NoteOn: {
+                    if (!map.InRange(data1)) break;
                     map.semitone_mask = map.semitone_mask | (1u << (data1 % 12));
 
                     // Should this message go out on this channel?
@@ -522,6 +541,7 @@ struct MIDIFrame {
                     break;
                 }
                 case usbMIDI.NoteOff: {
+                    if (!map.InRange(data1)) break;
                     map.semitone_mask = map.semitone_mask & ~(1u << (data1 % 12));
 
                     if (note_buffer[m_ch].size() > 0) { // don't update output when last note is released
