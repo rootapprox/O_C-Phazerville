@@ -892,7 +892,7 @@ private:
             // Handle system exclusive dump for Setup data
             if (message == HEM_MIDI_SYSEX) OnReceiveSysEx();
 
-            HS::frame.MIDIState.ProcessMIDIMsg(channel, message, data1, data2);
+            HS::frame.MIDIState.ProcessMIDIMsg({channel, message, data1, data2});
             //process_midi_in(message, channel, data1, data2);
         }
     }
