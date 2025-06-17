@@ -103,7 +103,9 @@
 #include "applets/hMIDIIn.h"
 #include "applets/hMIDIOut.h"
 
+#ifdef __IMXRT1062__
 #include "applets/JoyStyx.h"
+#endif
 
 template<class A>
 struct DeclareApplet {
@@ -220,7 +222,9 @@ AppletRegistry reg{
 #ifdef PEWPEWPEW
     DeclareApplet<WTVCO>{67, 0x80},
 #endif
+#ifdef __IMXRT1062__
     DeclareApplet<JoyStyx>{81, 0x80},
+#endif
 };
 
 
