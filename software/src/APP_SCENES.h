@@ -305,7 +305,7 @@ public:
                     ClockOut(3);
                 continue;
             }
-            Out(ch, active_scene.values[ch]);
+            Out(ch, active_scene.values[ch] - SCENE_MIN_VAL*(OC::DAC::kOctaveZero == 0));
         }
 
         // encoder deceleration
@@ -547,7 +547,8 @@ private:
           gfxIcon(1, 1, PhzIcons::pigeons, true);
 
         // ------------------- //
-        gfxDottedLine(0, 48, 127, 48, 4);
+        const int center = 63 - 5*OC::DAC::kOctaveZero;
+        gfxDottedLine(0, center, 127, center, 4);
 
         // -- Input indicators
         // bias (CV2)
