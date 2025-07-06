@@ -111,7 +111,9 @@ enum MIDIFunctions : uint8_t {
     HEM_MIDI_CLOCK_16_OUT,
     HEM_MIDI_CLOCK_24_OUT, // full 24ppqn
 
-    HEM_MIDI_MAX_FUNCTION = HEM_MIDI_CLOCK_24_OUT
+    HEM_MIDI_MAX_FUNCTION = HEM_MIDI_CLOCK_24_OUT,
+
+    HEM_MIDI_LEARN = 0xff,
 };
 const char* const midi_fn_name[HEM_MIDI_MAX_FUNCTION + 1] = {
     "None",
