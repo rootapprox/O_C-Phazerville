@@ -291,6 +291,7 @@ public:
         // Restore global quantizer settings
         for (size_t qslot = 0; qslot < QUANT_CHANNEL_COUNT; ++qslot) {
           uint64_t data = hem_presets[HEM_NR_OF_PRESETS + 1 + (qslot/3)].GetData(HEM_SIDE(qslot));
+          if (data == 0) break; // don't load blanks
           auto &q = q_engine[qslot];
           UnpackPackables(data,
               q.scale,
