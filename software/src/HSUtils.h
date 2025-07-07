@@ -207,18 +207,18 @@ namespace HS {
 
   struct QuantEngine {
     braids::Quantizer quantizer;
-    int16_t scale;
+    int16_t scale = OC::Scales::SCALE_SEMI;
     int8_t root_note;
     int8_t octave;
-    uint16_t mask;
+    uint16_t mask = 0xffff;
 
     void Reconfig() {
       quantizer.Configure(OC::Scales::GetScale(scale), mask);
     }
-    void Configure(int scale, uint16_t mask) {
-      CONSTRAIN(scale, 0, OC::Scales::NUM_SCALES - 1);
-      scale = scale;
-      mask = mask;
+    void Configure(int scale_, uint16_t mask_) {
+      CONSTRAIN(scale_, 0, OC::Scales::NUM_SCALES - 1);
+      scale = scale_;
+      if (mask_) mask = mask_;
       Reconfig();
     }
     void EditMask(int idx, bool on) {
