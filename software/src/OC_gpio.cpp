@@ -16,9 +16,7 @@ uint8_t OC_GPIO_DEBUG_PIN1=24, OC_GPIO_DEBUG_PIN2=25;
 bool ADC33131D_Uses_FlexIO=false;
 bool OLED_Uses_SPI1=false;
 bool DAC8568_Uses_SPI=false;
-#ifdef NORTHERNLIGHT
-constexpr bool NorthernLightModular=true;
-#else
+#ifndef NORTHERNLIGHT
 bool NorthernLightModular=false;
 #endif
 bool I2S2_Audio_ADC=false;
