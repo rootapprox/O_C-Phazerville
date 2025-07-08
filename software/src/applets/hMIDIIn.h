@@ -261,7 +261,7 @@ private:
         else graphics.printf("%3d", m_ch + 1);
 
         gfxIcon(2, 34, MIDI_ICON);
-        if (map.function <= HEM_MIDI_MAX_FUNCTION)
+        if (map.function < HEM_MIDI_FN_COUNT)
           gfxPrint(13, 35, midi_fn_name[map.function]);
         if (map.function == HEM_MIDI_CC_OUT)
             gfxPrint(map.function_cc);
