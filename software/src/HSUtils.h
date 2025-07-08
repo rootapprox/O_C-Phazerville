@@ -174,10 +174,12 @@ namespace HS {
 
   extern QuantEngine q_engine[QUANT_CHANNEL_COUNT];
 
-#ifdef NORTHERNLIGHT
+#if defined(ARDUINO_TEENSY41) || defined(VOR)
+  extern int octave_max;
+#elif defined(NORTHERNLIGHT)
   static constexpr int octave_max = 10;
 #else
-  extern int octave_max;
+  static constexpr int octave_max = 6;
 #endif
 
   extern int select_mode;

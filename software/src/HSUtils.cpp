@@ -26,7 +26,7 @@ namespace HS {
   int next_ch = -1;
   int8_t next_octave, next_root_note;
 
-#ifndef NORTHERNLIGHT
+#if defined(ARDUINO_TEENSY41) || defined(VOR)
   int octave_max = 6;
 #endif
 
